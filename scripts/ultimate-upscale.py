@@ -1,9 +1,10 @@
+import os
 import math
 import gradio as gr
 from PIL import Image, ImageDraw, ImageOps
 from modules import processing, shared, images, devices, scripts
 from modules.processing import StableDiffusionProcessing
-from modules.processing import Processed
+from modules.processing import Processed, process_images
 from modules.shared import opts, state
 from enum import Enum
 
@@ -415,7 +416,7 @@ class USDUSeamsFix():
 
 class Script(scripts.Script):
     def title(self):
-        return "Ultimate SD upscale"
+        return "Ultimate SD upscale Modify"
 
     def show(self, is_img2img):
         return is_img2img
@@ -513,6 +514,15 @@ class Script(scripts.Script):
             upscaler_index, save_upscaled_image, redraw_mode, save_seams_fix_image, seams_fix_mask_blur,
             seams_fix_type, target_size_type, custom_width, custom_height, custom_scale):
 
+
+        # directory = os.path.join("D:\\sd\\stable-diffusion-webui\\catgirl_test")
+
+        # for filename in os.listdir(directory):
+
+        #     file_path = os.path.join(directory,filename)
+
+        #     if os.path.isfile(file_path):
+
         # Init
         processing.fix_seed(p)
         devices.torch_gc()
@@ -522,10 +532,16 @@ class Script(scripts.Script):
         p.inpaint_full_res = False
 
         p.inpainting_fill = 1
-        p.n_iter = 1
-        p.batch_size = 1
+        # p.n_iter = 1
+        # p.batch_size = 1
 
         seed = p.seed
+
+        # Custom Code
+        # p.init_images = [Image.open(file_path)]
+        metadata = p.init_images[0].info
+        p.prompt = metadata['positive']
+        p.negative_prompt = metadata['negative']
 
         # Init image
         init_img = p.init_images[0]
@@ -553,5 +569,6 @@ class Script(scripts.Script):
         upscaler.process()
         result_images = upscaler.result_images
 
-        return Processed(p, result_images, seed, upscaler.initial_info if upscaler.initial_info is not None else "")
+        # processed = process_images(p)
 
+        return Processed(p, result_images, seed, upscaler.initial_info if upscaler.initial_info is not None else "")
